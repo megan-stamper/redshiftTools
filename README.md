@@ -2,7 +2,7 @@
 redshiftTools
 =============
 
-This is an R Package meant to easen common operations with Amazon Redshift. The first motivation for this package was making it easier for bulk uploads, where the procedure for uploading data consists in generating various CSV files, uploading them to an S3 bucket and then calling a copy command on the server, this package helps with all those tasks in encapsulated functions.
+This is an R Package meant to ease common operations with Amazon Redshift. The package makes bulk uploads easier by uploading data to an S3 bucket and then calling a copy command on the server. All those tasks are enclosed in encapsulated functions.
 
 Installation
 ------------
@@ -10,58 +10,7 @@ Installation
 To install this package, you'll need to execute these commands:
 
 ``` r
-  install.packages("aws.ec2metadata", repos = c(cloudyr = "http://cloudyr.github.io/drat", getOption("repos")))
-    install.packages(c('devtools', 'httr', 'aws.s3', 'Rcpp', 'DBI'))
-    devtools::install_github("sicarul/redshiftTools")
-```
-
-Drivers
--------
-
-This library supports two official ways of connecting to Amazon Redshift (Others may work, but untested):
-
-### RPostgres
-
-This Postgres library is great, and it works even with Amazon Redshift servers with SSL enabled. It previously didn't support transactions, but is now the recommended way to work with redshiftTools.
-
-To use it, please configure like this:
-
-``` r
-    devtools::install_github("r-dbi/RPostgres")
-    library(RPostgres)
-    
-    con <- dbConnect(RPostgres::Postgres(), dbname="dbname",
-    host='my-redshift-url.amazon.com', port='5439',
-    user='myuser', password='mypassword',sslmode='require')
-    test=dbGetQuery('select 1')
-```
-
-### RJDBC
-
-If you download the official redshift driver .jar, you can use it with this R library, it's not great in the sense that you can't use it with dplyr for example, since it doesn't implement all the standard DBI interfaces, but it works fine for uploading data.
-
-To use it, please configure like this:
-
-``` r
-    install.packages('RJDBC')
-    library(RJDBC)
-    
-    # Save the driver into a directory
-    dir.create('~/.redshiftTools')
-    download.file('http://s3.amazonaws.com/redshift-downloads/drivers/RedshiftJDBC41-1.1.9.1009.jar','~/.redshiftTools/redshift-driver.jar')
-    
-    # Use Redshift driver
-    driver <- JDBC("com.amazon.redshift.jdbc41.Driver", "~/.redshiftTools/redshift-driver.jar", identifier.quote="`")
-
-    # Create connection    
-    dbname="dbname"
-    host='my-redshift-url.amazon.com'
-    port='5439'
-    user='myuser'
-    password='mypassword'
-    ssl='true'
-    url <- sprintf("jdbc:redshift://%s:%s/%s?tcpKeepAlive=true&ssl=%s&sslfactory=com.amazon.redshift.ssl.NonValidatingFactory", host, port, dbname, ssl)
-    conn <- dbConnect(driver, url, user, password)
+    devtools::install_github("megan-stamper/redshiftTools")
 ```
 
 Usage
