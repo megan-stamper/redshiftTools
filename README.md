@@ -7,7 +7,7 @@ This is an R Package meant to ease common operations with Amazon Redshift. The p
 Installation
 ------------
 
-To install this package, you'll need to execute these commands:
+To install this package:
 
 ``` r
     devtools::install_github("megan-stamper/redshiftTools")
@@ -18,7 +18,7 @@ Usage
 
 ### Creating tables
 
-For creating tables, there is a support function, `rs_create_statement`, which receives a data.frame and returns the query for creating the same table in Amazon Redshift.
+To create tables, use `rs_create_statement`, which receives a data.frame and returns the query for creating the same table in Amazon Redshift.
 
 ``` r
 n=1000
@@ -46,13 +46,11 @@ f VARCHAR(4096)
 );
 ```
 
-The cat is only done to view properly in console, it's not done directly in the function in case you need to pass the string to another function (Like a query runner)
-
 ### Uploading data
 
-For uploading data, you'll have available now 2 functions: `rs_replace_table` and `rs_upsert_table`, both of these functions are called with almost the same parameters, except on upsert you can specify with which keys to search for matching rows.
+To upload data, there are two functions: `rs_replace_table` and `rs_upsert_table`. Both have almost the same parameters, except upsert allows you to specify keys to search for matching rows.
 
-For example, suppose we have a table to load with 2 integer columns, we could use the following code:
+For example, suppose we have a table to load with two columns of integers, we could use the following code:
 
 ``` r
     library("aws.s3")
@@ -88,5 +86,4 @@ A conjunction of `rs_create_statement` and `rs_replace_table` can be found in `r
     user='myuser', password='mypassword',sslmode='require')
 
     b=rs_create_table(a, dbcon=con, table_name='mytable', bucket="mybucket", split_files=4)
-    
 ```

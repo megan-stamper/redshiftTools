@@ -11,7 +11,6 @@
 #' @param region the region of the bucket. Will look for AWS_DEFAULT_REGION on environment if not specified.
 #' @param access_key the access key with permissions for the bucket. Will look for AWS_ACCESS_KEY_ID on environment if not specified.
 #' @param secret_key the secret key with permissions fot the bucket. Will look for AWS_SECRET_ACCESS_KEY on environment if not specified.
-#' @param iam_role_arn an iam role arn with permissions fot the bucket. Will look for AWS_IAM_ROLE_ARN on environment if not specified. This is ignoring access_key and secret_key if set.
 #' @param wlm_slots amount of WLM slots to use for this bulk load http://docs.aws.amazon.com/redshift/latest/dg/tutorial-configuring-workload-management.html
 #' @param additional_params Additional params to send to the COPY statement in Redshift
 #'
@@ -35,13 +34,12 @@ rs_replace_table = function(
     dbcon,
     table_name,
     split_files,
-    bucket=Sys.getenv('AWS_BUCKET_NAME'),
-    region=Sys.getenv('AWS_DEFAULT_REGION'),
-    access_key=Sys.getenv('AWS_ACCESS_KEY_ID'),
-    secret_key=Sys.getenv('AWS_SECRET_ACCESS_KEY'),
-    iam_role_arn=Sys.getenv('AWS_IAM_ROLE_ARN'),
-    wlm_slots=1,
-    additional_params=''
+    bucket = Sys.getenv('AWS_BUCKET_NAME'),
+    region = Sys.getenv('AWS_DEFAULT_REGION'),
+    access_key = Sys.getenv('AWS_ACCESS_KEY_ID'),
+    secret_key = Sys.getenv('AWS_SECRET_ACCESS_KEY'),
+    wlm_slots = 1,
+    additional_params = ''
     )
   {
 
@@ -72,7 +70,7 @@ rs_replace_table = function(
   }
 
   result = tryCatch({
-      stageTable=s3ToRedshift(dbcon, table_name, bucket, prefix, region, access_key, secret_key, iam_role_arn, additional_params)
+      stageTable=s3ToRedshift(dbcon, table_name, bucket, prefix, region, access_key, secret_key, additional_params)
 
       # Use a single transaction
       queryStmt(dbcon, 'begin')

@@ -3,7 +3,7 @@ Type: Package
 Title: Redshift Tools
 Version: 0.3.900
 Authors@R: person("Pablo", "Seibelt", email = "pabloseibelt@sicarul.com",
-  role = c("aut", "cre"))
+    role = c("aut", "cre"))
 Mantainers@R: person("Pablo", "Seibelt", email = "pabloseibelt@sicarul.com",
     role = c("aut", "cre"))
 Depends:

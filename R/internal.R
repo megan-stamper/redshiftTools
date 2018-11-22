@@ -4,7 +4,7 @@
 #' @importFrom "utils" "write.csv"
 uploadToS3 = function (data, bucket, split_files, key, secret, region){
   prefix=paste0(sample(rep(letters, 10),50),collapse = "")
-  if(!bucket_exists(bucket, key=key, secret=secret, region=region)){
+  if(!bucket_exists(bucket, key = key, secret = secret, region = region)){
     stop("Bucket does not exist")
   }
   splitted = suppressWarnings(split(data, seq(1:split_files)))
@@ -14,10 +14,10 @@ uploadToS3 = function (data, bucket, split_files, key, secret, region){
 
     tmpFile = tempfile()
     s3Name=paste(bucket, "/", prefix, ".", formatC(i, width = 4, format = "d", flag = "0"), sep="")
-    write.csv(part, gzfile(tmpFile, encoding="UTF-8"), na='', row.names=F, quote=T)
+    write.csv(part, gzfile(tmpFile, encoding = "UTF-8"), na = '', row.names = F, quote = T)
 
     print(paste("Uploading", s3Name))
-    put_object(file = tmpFile, object = s3Name, bucket = "", key=key, secret=secret, region=region)
+    put_object(file = tmpFile, object = s3Name, bucket = "", key = key, secret = secret, region = region)
   }
 
   return(prefix)
@@ -62,8 +62,7 @@ splitDetermine = function(dbcon){
   return(split_files)
 }
 
-
-s3ToRedshift = function(dbcon, table_name, bucket, prefix, region, access_key, secret_key, iam_role_arn, additional_params){
+s3ToRedshift = function(dbcon, table_name, bucket, prefix, region, access_key, secret_key, additional_params){
     stageTable=paste0(sample(letters,16),collapse = "")
     # Create temporary table for staging data
     queryStmt(dbcon, sprintf("create temp table %s (like %s)", stageTable, table_name))
@@ -71,12 +70,7 @@ s3ToRedshift = function(dbcon, table_name, bucket, prefix, region, access_key, s
     print("Copying data from S3 into Redshift")
     copyStr = "copy %s from 's3://%s/%s.' region '%s' csv gzip ignoreheader 1 emptyasnull COMPUPDATE FALSE STATUPDATE FALSE %s %s"
 
-    # Use IAM Role if available
-    if (nchar(iam_role_arn) > 0) {
-      credsStr = sprintf("iam_role '%s'", iam_role_arn)
-    } else {
-      credsStr = sprintf("credentials 'aws_access_key_id=%s;aws_secret_access_key=%s'", access_key, secret_key)
-    }
+    credsStr = sprintf("credentials 'aws_access_key_id=%s;aws_secret_access_key=%s'", access_key, secret_key)
     statement = sprintf(copyStr, stageTable, bucket, prefix, region, additional_params, credsStr)
     queryStmt(dbcon,statement)
 

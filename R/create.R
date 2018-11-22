@@ -1,5 +1,4 @@
-#' Create a table from scratch, guessing the table schema
-#'
+#' Create a table from scratch
 #'
 #' @param df a data frame
 #' @param dbcon an RPostgres connection to the redshift server
@@ -9,7 +8,6 @@
 #' @param region the region of the bucket. Will look for AWS_DEFAULT_REGION on environment if not specified.
 #' @param access_key the access key with permissions for the bucket. Will look for AWS_ACCESS_KEY_ID on environment if not specified.
 #' @param secret_key the secret key with permissions fot the bucket. Will look for AWS_SECRET_ACCESS_KEY on environment if not specified.
-#' @param iam_role_arn an iam role arn with permissions fot the bucket. Will look for AWS_IAM_ROLE_ARN on environment if not specified. This is ignoring access_key and secret_key if set.
 #' @param wlm_slots amount of WLM slots to use for this bulk load http://docs.aws.amazon.com/redshift/latest/dg/tutorial-configuring-workload-management.html
 #' @param sortkeys Column or columns to sort the table by
 #' @param sortkey_style Sortkey style, can be compound or interleaved http://docs.aws.amazon.com/redshift/latest/dg/t_Sorting_data-compare-sort-styles.html
@@ -26,7 +24,7 @@
 #'\dontrun{
 #' con <- dbConnect(RPostgres::Postgres(), dbname="dbname",
 #' host='my-redshift-url.amazon.com', port='5439',
-#' user='myuser', password='mypassword',sslmode='require')
+#' user='myuser', password='mypassword', sslmode='require')
 #'
 #' rs_create_table(df=a, dbcon=con, table_name='testTable',
 #' bucket="my-bucket", split_files=4)
@@ -42,7 +40,6 @@ rs_create_table = function(
     region=Sys.getenv('AWS_DEFAULT_REGION'),
     access_key=Sys.getenv('AWS_ACCESS_KEY_ID'),
     secret_key=Sys.getenv('AWS_SECRET_ACCESS_KEY'),
-    iam_role_arn=Sys.getenv('AWS_IAM_ROLE_ARN'),
     wlm_slots=1,
     sortkeys,
     sortkey_style='compound',
@@ -59,6 +56,6 @@ rs_create_table = function(
 
   queryStmt(dbcon, tableSchema)
 
-  return(rs_replace_table(df, dbcon, table_name, split_files, bucket, region, access_key, secret_key, iam_role_arn, wlm_slots, additional_params))
-
+  return(rs_replace_table(df, dbcon, table_name, split_files, bucket, region,
+                          access_key, secret_key, wlm_slots, additional_params))
 }

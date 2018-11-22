@@ -13,25 +13,24 @@
 #' @param region the region of the bucket. Will look for AWS_DEFAULT_REGION on environment if not specified.
 #' @param access_key the access key with permissions for the bucket. Will look for AWS_ACCESS_KEY_ID on environment if not specified.
 #' @param secret_key the secret key with permissions fot the bucket. Will look for AWS_SECRET_ACCESS_KEY on environment if not specified.
-#' @param iam_role_arn an iam role arn with permissions fot the bucket. Will look for AWS_IAM_ROLE_ARN on environment if not specified. This is ignoring access_key and secret_key if set.
 #' @param wlm_slots amount of WLM slots to use for this bulk load http://docs.aws.amazon.com/redshift/latest/dg/tutorial-configuring-workload-management.html
 #' @param additional_params Additional params to send to the COPY statement in Redshift
 #'
 #' @examples
 #' library(DBI)
 #'
-#' a=data.frame(a=seq(1,10000), b=seq(10000,1))
-#' n=head(a,n=5000)
-#' n$b=n$a
-#' nx=rbind(n, data.frame(a=seq(99999:104000), b=seq(104000:99999)))
+#' a = data.frame(a = seq(1,10000), b = seq(10000,1))
+#' n = head(a,n=5000)
+#' n$b = n$a
+#' nx = rbind(n, data.frame(a = seq(99999:104000), b = seq(104000:99999)))
 #'
 #'\dontrun{
-#' con <- dbConnect(RPostgres::Postgres(), dbname="dbname",
-#' host='my-redshift-url.amazon.com', port='5439',
-#' user='myuser', password='mypassword',sslmode='require')
+#' con <- dbConnect(RPostgres::Postgres(), dbname = "dbname",
+#' host = 'my-redshift-url.amazon.com', port='5439',
+#' user = 'myuser', password = 'mypassword', sslmode = 'require')
 #'
-#' rs_upsert_table(df=nx, dbcon=con, table_name='testTable',
-#' bucket="my-bucket", split_files=4, keys=c('a'))
+#' rs_upsert_table(df = nx, dbcon = con, table_name = 'testTable',
+#' bucket = "my-bucket", split_files = 4, keys = c('a'))
 #'
 #'}
 #' @export
@@ -41,24 +40,23 @@ rs_upsert_table = function(
     table_name,
     keys,
     split_files,
-    bucket=Sys.getenv('AWS_BUCKET_NAME'),
-    region=Sys.getenv('AWS_DEFAULT_REGION'),
-    access_key=Sys.getenv('AWS_ACCESS_KEY_ID'),
-    secret_key=Sys.getenv('AWS_SECRET_ACCESS_KEY'),
-    iam_role_arn=Sys.getenv('AWS_IAM_ROLE_ARN'),
-    wlm_slots=1,
-    additional_params=''
+    bucket = Sys.getenv('AWS_BUCKET_NAME'),
+    region = Sys.getenv('AWS_DEFAULT_REGION'),
+    access_key = Sys.getenv('AWS_ACCESS_KEY_ID'),
+    secret_key = Sys.getenv('AWS_SECRET_ACCESS_KEY'),
+    wlm_slots = 1,
+    additional_params = ''
     )
   {
 
   if(!inherits(df, 'data.frame')){
-    warning("The df parameter must be a data.frame or an object compatible with it's interface")
+    warning("The df parameter must be a data.frame or an object compatible with its interface")
     return(FALSE)
   }
   numRows = nrow(df)
 
   if(numRows == 0){
-    warning("Empty dataset provided, will not try uploading")
+    warning("Empty dataset provided. Will not attempt to upload.")
     return(FALSE)
   }
 
@@ -72,21 +70,20 @@ rs_upsert_table = function(
   # Upload data to S3
   prefix = uploadToS3(df, bucket, split_files, access_key, secret_key, region)
 
-  if(wlm_slots>1){
+  if(wlm_slots > 1){
     queryStmt(dbcon,paste0("set wlm_query_slot_count to ", wlm_slots));
   }
 
   result = tryCatch({
-    stageTable=s3ToRedshift(dbcon, table_name, bucket, prefix, region, access_key, secret_key, iam_role_arn, additional_params)
+    stageTable = s3ToRedshift(dbcon, table_name, bucket, prefix, region, access_key, secret_key, additional_params)
 
     # Use a single transaction
     queryStmt(dbcon, 'begin')
 
-
     if(!missing(keys)){
       # where stage.key = table.key and...
-      keysCond = paste(stageTable,".",keys, "=", table_name,".",keys, sep="")
-      keysWhere = sub(" and $", "", paste0(keysCond, collapse="", sep=" and "))
+      keysCond = paste(stageTable, ".", keys, "=", table_name, ".", keys, sep = "")
+      keysWhere = sub(" and $", "", paste0(keysCond, collapse = "", sep = " and "))
 
       queryStmt(dbcon, sprintf('delete from %s using %s where %s',
               table_name,

@@ -1,20 +1,20 @@
 #' @importFrom "utils" "head"
 calculateCharSize <- function(col){
-  col=as.character(col)
+  col = as.character(col)
   maxChar = max(nchar(col), na.rm=T)
   if(is.infinite(maxChar)){
-    maxChar=1000
-    warning('Empty column found, setting to 1024 length')
+    maxChar = 1000
+    warning('Empty column found, setting to length 1024')
   }
 
-  sizes = 2^c(3:16) # From 8 to 65536, max varchar size in redshift
+  sizes = 2^c(3:16) # From 8 to 65536 (max varchar size in redshift)
   fsizes = sizes[ifelse(sizes>maxChar, T, F)]
-  if(length(fsizes)==0){
-    warning("Character column over maximum size of 65536, set to that value but will fail if not trimmed before uploading!")
-    warning(paste0('Example offending value: ', head(col[nchar(col) > 65536], 1)))
-    return(max(sizes, na.rm=T))
+  if(length(fsizes) == 0){
+    warning("Character column over maximum size of 65536. Set to 65536. Trim column before uploading!")
+    warning(paste0('Example to trim: ', head(col[nchar(col) > 65536], 1)))
+    return(max(sizes, na.rm = T))
   }else{
-    return(min(fsizes, na.rm=T))
+    return(min(fsizes, na.rm = T))
   }
 }
 
@@ -33,7 +33,7 @@ colToRedshiftType <- function(col, compression) {
            }
            if(max(col, na.rm = T) < 2000000000){ # Max int is 2147483647 in Redshift
              return('int')
-           } else if (max(col, na.rm=T) < 9200000000000000000){ #Max bigint is 9223372036854775807 in redshift, if bigger treat as numeric
+           } else if (max(col, na.rm = T) < 9200000000000000000){ # Max bigint is 9223372036854775807 in redshift, if bigger treat as numeric
              return('bigint')
            } else{
              return('numeric(38,0)')
@@ -52,7 +52,7 @@ colToRedshiftType <- function(col, compression) {
 
   )
   charSize = calculateCharSize(col)
-  if(compression==T){
+  if(compression == T){
     return(paste0('VARCHAR(', charSize, ') encode zstd'))
   }else{
     return(paste0('VARCHAR(', charSize, ')'))
@@ -84,55 +84,55 @@ getRedshiftTypesForDataFrame <- function(df, compression) {
 #' @param compression Add encoding for columns whose compression algorithm is easy to guess, for the rest you should upload it to Redshift and run ANALYZE COMPRESSION
 #' @examples
 #'
-#'n=1000
+#'n = 1000
 #'testdf = data.frame(
-#'a=rep('a', n),
-#'b=c(1:n),
-#'c=rep(as.Date('2017-01-01'), n),
-#'d=rep(as.POSIXct('2017-01-01 20:01:32'), n),
-#'e=rep(as.POSIXlt('2017-01-01 20:01:32'), n),
-#'f=rep(paste0(rep('a', 4000), collapse=''), n) )
+#'a = rep('a', n),
+#'b = c(1:n),
+#'c = rep(as.Date('2017-01-01'), n),
+#'d = rep(as.POSIXct('2017-01-01 20:01:32'), n),
+#'e = rep(as.POSIXlt('2017-01-01 20:01:32'), n),
+#'f = rep(paste0(rep('a', 4000), collapse = ''), n) )
 #'
-#'cat(rs_create_statement(testdf, table_name='dm_great_table'))
+#'cat(rs_create_statement(testdf, table_name = 'dm_great_table'))
 #'
 #' @export
 rs_create_statement <- function(
   df,
   table_name = deparse(substitute(df)),
   sortkeys,
-  sortkey_style='compound',
+  sortkey_style = 'compound',
   distkey,
-  distkey_style='even',
-  compression=T
+  distkey_style = 'even',
+  compression = T
   ){
   definitions = getRedshiftTypesForDataFrame(df, compression)
-  fields = paste(names(definitions), definitions, collapse=',\n')
-  sortkey_style=tolower(sortkey_style)
-  distkey_style=tolower(distkey_style)
+  fields = paste(names(definitions), definitions, collapse = ',\n')
+  sortkey_style = tolower(sortkey_style)
+  distkey_style = tolower(distkey_style)
 
   if(ncol(df) > 1600){
     warning("Redshift doesn't support tables of more than 1600 columns")
   }
 
-  dkey=''
+  dkey = ''
   if(!missing(distkey)){
-    dkey=paste0('diststyle key distkey(', distkey, ')\n')
-  }else if (distkey_style=='all'){
-    dkey=paste0('diststyle all\n')
-  }else if (distkey_style!='even'){
+    dkey = paste0('diststyle key distkey(', distkey, ')\n')
+  }else if (distkey_style == 'all'){
+    dkey = paste0('diststyle all\n')
+  }else if (distkey_style != 'even'){
     warning('Unknown distkey style', distkey_style)
   }
 
-  skey=''
+  skey = ''
   if(!missing(sortkeys)){
     if(length(sortkeys) > 1){
-      skeyvals = paste(sortkeys, collapse=', ')
+      skeyvals = paste(sortkeys, collapse = ', ')
       if(!sortkey_style %in% c('interleaved', 'compound')){
         warning('Unknown sortkey style', sortkey_style)
       }
-      skey=paste0(sortkey_style, ' sortkey (', skeyvals, ')\n')
+      skey = paste0(sortkey_style, ' sortkey (', skeyvals, ')\n')
     }else{
-      skey=paste0('sortkey(', sortkeys,')\n')
+      skey = paste0('sortkey(', sortkeys,')\n')
     }
   }
 
